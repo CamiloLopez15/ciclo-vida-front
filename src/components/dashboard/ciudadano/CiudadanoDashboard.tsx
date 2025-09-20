@@ -38,7 +38,7 @@ export const CiudadanoDashboard: React.FC = () => {
     if (action === 'valorar') {
       // Buscar el reciclador asociado a la recolección
       const reciclador = mockRecicladores.find(r => r.id === recoleccion.recicladorId);
-      
+
       if (reciclador) {
         setSelectedRecoleccion(recoleccion);
         setShowValoracionModal(true);
@@ -54,7 +54,7 @@ export const CiudadanoDashboard: React.FC = () => {
 
   const handleNotificationAction = (action: 'markAsRead' | 'delete' | 'markAllAsRead', id?: string) => {
     if (action === 'markAsRead' && id) {
-      setNotificaciones(prev => 
+      setNotificaciones(prev =>
         prev.map(n => n.id === id ? { ...n, leida: true } : n)
       );
     } else if (action === 'delete' && id) {
@@ -78,7 +78,7 @@ export const CiudadanoDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Mis Recolecciones</h1>
-              <p className="text-gray-600 mt-2">Gestiona tus solicitudes de recolección</p>
+              <p className="text-gray-600 mt-2">Gestionasss tus solicitudes de recolección</p>
             </div>
             <div className="flex space-x-3">
               <Button variant="outline" onClick={() => setActiveTab('dashboard')}>
@@ -157,37 +157,68 @@ export const CiudadanoDashboard: React.FC = () => {
 
     if (activeTab === 'mapa') {
       const mapMarkers = [
+        // Marcador del usuario actual
         {
           id: 'user',
-          position: { lat: 4.6533, lng: -74.0836 },
-          title: 'Mi ubicación',
+          position: { lat: 4.6533, lng: -74.0836 }, // Coordenadas de ejemplo (Bogotá)
+          title: 'Tu ubicación',
           type: 'user' as const
         },
-        ...mockRecicladores.map(r => ({
-          id: r.id,
-          position: r.coordinates,
-          title: r.name,
+        // Marcadores de recicladores cercanos (ejemplo)
+        ...mockRecicladores.slice(0, 5).map((reciclador) => ({
+          id: `reciclador-${reciclador.id}`,
+          position: { 
+            lat: 4.6533 + (Math.random() * 0.02 - 0.01), // Coordenadas cercanas al usuario
+            lng: -74.0836 + (Math.random() * 0.02 - 0.01)
+          },
+          title: reciclador.name,
           type: 'reciclador' as const
         }))
       ];
 
       return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-8">
+        <div className="space-y-4 px-4 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Mapa de Recicladores</h1>
-              <p className="text-gray-600 mt-2">Visualiza recicladores cercanos a tu ubicación</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Mapa de Recicladores</h1>
+              <p className="text-gray-600 mt-1">Encuentra recicladores cerca de tu ubicación</p>
             </div>
-            <Button variant="outline" onClick={() => setActiveTab('dashboard')}>
-              Volver al Dashboard
-            </Button>
+            <div className="flex gap-2 w-full md:w-auto">
+              <Button 
+                variant="outline" 
+                className="w-full md:w-auto"
+                onClick={() => setActiveTab('recicladores')}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Ver Lista
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full md:w-auto"
+                onClick={() => setActiveTab('dashboard')}
+              >
+                Volver al Inicio
+              </Button>
+            </div>
           </div>
-
-          <MapView
-            center={{ lat: 4.6533, lng: -74.0836 }}
-            markers={mapMarkers}
-            height="500px"
-          />
+          
+          <div className="rounded-xl overflow-hidden shadow-lg border border-gray-200" style={{ height: 'calc(100vh - 200px)' }}>
+            <MapView height="100%" />
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+            <h3 className="font-medium text-gray-800 mb-3">Leyenda del Mapa</h3>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-700">Tu ubicación</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-700">Recicladores disponibles</span>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
@@ -222,7 +253,7 @@ export const CiudadanoDashboard: React.FC = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Próxima Recolección</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {stats.proximaRecoleccion 
+                  {stats.proximaRecoleccion
                     ? new Date(stats.proximaRecoleccion.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })
                     : 'N/A'
                   }
@@ -283,7 +314,7 @@ export const CiudadanoDashboard: React.FC = () => {
                 <div key={recoleccion.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">
-                      {recoleccion.recicladorId 
+                      {recoleccion.recicladorId
                         ? mockRecicladores.find(r => r.id === recoleccion.recicladorId)?.name || 'Reciclador'
                         : 'Pendiente de asignación'
                       }
@@ -292,16 +323,15 @@ export const CiudadanoDashboard: React.FC = () => {
                       {new Date(recoleccion.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}, {recoleccion.hora}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    recoleccion.estado === 'completada' ? 'bg-green-100 text-green-800' :
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${recoleccion.estado === 'completada' ? 'bg-green-100 text-green-800' :
                     recoleccion.estado === 'pendiente' ? 'bg-yellow-100 text-yellow-800' :
-                    recoleccion.estado === 'aceptada' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
+                      recoleccion.estado === 'aceptada' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                    }`}>
                     {recoleccion.estado === 'completada' ? 'Completada' :
-                     recoleccion.estado === 'pendiente' ? 'Pendiente' :
-                     recoleccion.estado === 'aceptada' ? 'Aceptada' :
-                     recoleccion.estado}
+                      recoleccion.estado === 'pendiente' ? 'Pendiente' :
+                        recoleccion.estado === 'aceptada' ? 'Aceptada' :
+                          recoleccion.estado}
                   </span>
                 </div>
               ))}
@@ -309,8 +339,8 @@ export const CiudadanoDashboard: React.FC = () => {
                 <div className="text-center py-8 text-gray-500">
                   <Recycle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p>No tienes recolecciones aún</p>
-                  <Button 
-                    className="mt-4" 
+                  <Button
+                    className="mt-4"
                     size="sm"
                     onClick={() => setShowAgendarModal(true)}
                   >
@@ -367,7 +397,7 @@ export const CiudadanoDashboard: React.FC = () => {
     <>
       {/* Contenido principal */}
       {renderMainContent()}
-      
+
       {/* Modales globales */}
       {renderModals()}
     </>
