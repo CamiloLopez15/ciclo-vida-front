@@ -35,14 +35,36 @@ export const CiudadanoDashboard: React.FC = () => {
 
   const handleRecoleccionAction = (action: string, recoleccion: any) => {
     if (action === 'valorar') {
-      setSelectedRecoleccion(recoleccion);
-      setShowValoracionModal(true);
+      // Buscar el reciclador asociado a la recolección
+      const reciclador = mockRecicladores.find(r => r.id === recoleccion.recicladorId);
+      
+      if (reciclador) {
+        setSelectedRecoleccion(recoleccion);
+        setShowValoracionModal(true);
+      } else {
+        console.error('No se encontró el reciclador para esta recolección');
+      }
     }
-    console.log('Acción:', action, recoleccion);
   };
 
   const handleValoracionSubmit = (valoracion: { rating: number; comentario: string }) => {
-    console.log('Nueva valoración:', valoracion);
+    if (selectedRecoleccion) {
+      const nuevaValoracion = {
+        id: Date.now().toString(),
+        recoleccionId: selectedRecoleccion.id,
+        ciudadanoId: user?.id || '1',
+        recicladorId: selectedRecoleccion.recicladorId || '',
+        rating: valoracion.rating,
+        comentario: valoracion.comentario,
+        createdAt: new Date().toISOString()
+      };
+      
+      console.log('Nueva valoración creada:', nuevaValoracion);
+      // Aquí se enviará a la API en el futuro
+      
+      // Mostrar mensaje de éxito (opcional)
+      alert('¡Valoración enviada exitosamente!');
+    }
     // Aquí se enviaría la valoración a la API
   };
 
@@ -332,16 +354,21 @@ export const CiudadanoDashboard: React.FC = () => {
       />
 
       {selectedRecoleccion && (
-        <ValoracionModal
-          isOpen={showValoracionModal}
-          onClose={() => {
-            setShowValoracionModal(false);
-            setSelectedRecoleccion(null);
-          }}
-          recoleccion={selectedRecoleccion}
-          reciclador={mockRecicladores.find(r => r.id === selectedRecoleccion.recicladorId)!}
-          onSubmit={handleValoracionSubmit}
-        />
+        (() => {
+          const reciclador = mockRecicladores.find(r => r.id === selectedRecoleccion.recicladorId);
+          return reciclador ? (
+            <ValoracionModal
+              isOpen={showValoracionModal}
+              onClose={() => {
+                setShowValoracionModal(false);
+                setSelectedRecoleccion(null);
+              }}
+              recoleccion={selectedRecoleccion}
+              reciclador={reciclador}
+              onSubmit={handleValoracionSubmit}
+            />
+          ) : null;
+        })()
       )}
     </div>
   );

@@ -120,6 +120,15 @@ export const mockValoraciones: Valoracion[] = [
     rating: 5,
     comentario: 'Excelente servicio, muy puntual y amable. Recomendado 100%',
     createdAt: '2024-01-25T16:00:00Z'
+  },
+  {
+    id: '2',
+    recoleccionId: '4',
+    ciudadanoId: '1',
+    recicladorId: '4',
+    rating: 4,
+    comentario: 'Buen servicio, llegó a tiempo y fue muy profesional',
+    createdAt: '2024-01-30T16:30:00Z'
   }
 ];
 
