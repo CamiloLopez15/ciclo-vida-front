@@ -11,6 +11,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { mockCiudadanos, mockNotificaciones } from '../../../data/mockData';
 import { Notificacion, Recoleccion } from '../../../types';
 import { useListAppointments } from '../../../hook/useListAppointments';
+import { AppointmentCompletionModal } from '../../recolecciones/AppointmentCompletionModal';
 
 export const RecicladorDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -21,6 +22,8 @@ export const RecicladorDashboard: React.FC = () => {
     mockNotificaciones.filter(n => n.userId === user?.id)
   );
   const { appointments, loading: loadingAppointments, error: appointmentsError, fetchAppointments } = useListAppointments();
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<string | null>(null);
 
   // Fetch citas al montar
   useEffect(() => {
@@ -30,32 +33,49 @@ export const RecicladorDashboard: React.FC = () => {
   // Mapear citas del backend al shape usado en la UI de recolecciones
   useEffect(() => {
     if (appointments) {
-      const mapped: Recoleccion[] = appointments.map((a) => ({
-        id: a.id,
-        ciudadanoId: a.clienteId,
-        recicladorId: a.recicladorId,
-        fecha: typeof a.fecha === 'string' ? a.fecha : new Date(a.fecha.seconds * 1000).toISOString(),
-        hora: '',
-        direccion: a.direccion,
-        coordinates: { lat: 0, lng: 0 },
-        tipoMaterial: [] as string[],
-        descripcion: a.descripcion,
-        estado: a.estado as Recoleccion['estado'],
-        createdAt: new Date().toISOString(),
-      }));
+      const mapped: Recoleccion[] = appointments.map((a) => {
+        // Parsear fecha de forma segura desde distintos formatos
+        let fechaISO: string;
+        try {
+          if (!a.fecha) {
+            const now = new Date();
+            fechaISO = now.toISOString();
+          } else if (typeof a.fecha === 'string') {
+            const d = new Date(a.fecha);
+            fechaISO = isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+          } else if (typeof (a as any).fecha.seconds === 'number') {
+            const d = new Date((a as any).fecha.seconds * 1000);
+            fechaISO = isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+          } else {
+            fechaISO = new Date().toISOString();
+          }
+        } catch {
+          fechaISO = new Date().toISOString();
+        }
+
+        return {
+          id: a.id,
+          ciudadanoId: a.clienteId,
+          recicladorId: a.recicladorId,
+          fecha: fechaISO,
+          hora: '',
+          direccion: a.direccion,
+          coordinates: { lat: 0, lng: 0 },
+          tipoMaterial: [] as string[],
+          descripcion: a.descripcion,
+          estado: a.estado as Recoleccion['estado'],
+          createdAt: fechaISO,
+        } as Recoleccion;
+      });
       setRecolecciones(mapped);
     }
   }, [appointments]);
 
   const handleRecoleccionAction = (action: string, recoleccion: Recoleccion) => {
     if (action === 'aceptar') {
-      setRecolecciones(prev => 
-        prev.map(r => 
-          r.id === recoleccion.id 
-            ? { ...r, estado: 'aceptada' as const, recicladorId: user?.id }
-            : r
-        )
-      );
+      // Abrir modal para tipificar finalización y completar la cita
+      setSelectedAppointmentId(recoleccion.id);
+      setShowCompletionModal(true);
     } else if (action === 'iniciar') {
       setRecolecciones(prev => 
         prev.map(r => 
@@ -366,6 +386,25 @@ export const RecicladorDashboard: React.FC = () => {
         isOpen={showProfileModal}
         onClose={() => setShowProfileModal(false)}
       />
+      {/* Modal de Finalización de Cita */}
+      {selectedAppointmentId && (
+        <AppointmentCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => {
+            setShowCompletionModal(false);
+            setSelectedAppointmentId(null);
+          }}
+          appointmentId={selectedAppointmentId}
+          onSuccess={() => {
+            // Al completar exitosamente, marcar como completada y asignar reciclador
+            setRecolecciones(prev => prev.map((r: Recoleccion) =>
+              r.id === selectedAppointmentId
+                ? { ...r, estado: 'completada', recicladorId: user?.id }
+                : r
+            ));
+          }}
+        />
+      )}
     </div>
   );
 };

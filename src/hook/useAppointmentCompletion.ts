@@ -53,7 +53,7 @@ export const useAppointmentCompletion = (): UseAppointmentCompletionReturn => {
                 AppointmentCompletionPayload,
                 { success: boolean; data: AppointmentCompletionResponse; message: string }
             >(
-                `/api/appointments/${appointmentId}/complete`,
+                `/appointments/${appointmentId}/complete`,
                 payload
             );
 

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, User, Package } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { Recoleccion } from '../../types';
+import { AppointmentCompletionModal } from './AppointmentCompletionModal';
 
 interface RecoleccionCardProps {
   recoleccion: Recoleccion;
@@ -32,6 +33,8 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
   userType,
   onAction
 }) => {
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CO', {
       weekday: 'short',
@@ -104,7 +107,7 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
           <>
             <Button 
               size="sm" 
-              onClick={() => onAction?.('aceptar', recoleccion)}
+              onClick={() => setShowCompletionModal(true)}
             >
               Aceptar
             </Button>
@@ -165,6 +168,19 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
           </Button>
         )}
       </div>
+      {/* Modal de Finalización desde la tarjeta */}
+      {userType === 'reciclador' && showCompletionModal && (
+        <AppointmentCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => setShowCompletionModal(false)}
+          appointmentId={recoleccion.id}
+          onSuccess={() => {
+            // Notificar al padre que la recolección fue completada
+            onAction?.('completar', { ...recoleccion, estado: 'completada' });
+            setShowCompletionModal(false);
+          }}
+        />
+      )}
     </Card>
   );
 };
