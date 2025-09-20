@@ -338,7 +338,7 @@ export const RecicladorDashboard: React.FC = () => {
                         {new Date(recoleccion.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}, {recoleccion.hora}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {recoleccion.tipoMaterial.map((material: string) => (
+                        {(recoleccion.tipoMaterial || []).map((material: string) => (
                           <span key={material} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                             {material}
                           </span>
