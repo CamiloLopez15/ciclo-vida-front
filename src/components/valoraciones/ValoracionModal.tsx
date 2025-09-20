@@ -3,13 +3,14 @@ import { Star } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Recoleccion, Reciclador } from '../../types';
+import { ReviewService } from '../../services/ReviewService';
 
 interface ValoracionModalProps {
   isOpen: boolean;
   onClose: () => void;
   recoleccion: Recoleccion;
   reciclador: Reciclador;
-  onSubmit: (valoracion: { rating: number; comentario: string }) => void;
+  onSuccess: () => void;
 }
 
 export const ValoracionModal: React.FC<ValoracionModalProps> = ({
@@ -17,7 +18,7 @@ export const ValoracionModal: React.FC<ValoracionModalProps> = ({
   onClose,
   recoleccion,
   reciclador,
-  onSubmit
+  onSuccess
 }) => {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -30,18 +31,28 @@ export const ValoracionModal: React.FC<ValoracionModalProps> = ({
 
     setIsLoading(true);
     
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    onSubmit({ rating, comentario });
-    
-    setIsLoading(false);
-    onClose();
-    
-    // Reset form
-    setRating(0);
-    setHoveredRating(0);
-    setComentario('');
+    try {
+      const currentUserId = "user-123";
+
+      await ReviewService.createReview(reciclador.id, {
+        rating,
+        comentario,
+        usuarioId: currentUserId,
+      });
+      
+      onSuccess();
+      onClose();
+      
+      setRating(0);
+      setHoveredRating(0);
+      setComentario('');
+
+    } catch (error) {
+      console.error("Error al enviar la valoración:", error);
+      alert("No se pudo enviar la valoración. Inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleStarClick = (value: number) => {

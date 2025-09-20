@@ -1,10 +1,11 @@
-import React from 'react';
-import { Star, User, Calendar, MessageSquare, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Star, User, Calendar, MessageSquare, ArrowLeft, Loader, AlertCircle } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { useAuth } from '../../context/AuthContext';
-import { mockValoraciones, mockCiudadanos } from '../../data/mockData';
+import { ReviewService } from '../../services/ReviewService';
+import { Review, ReviewStats } from '../../types/review.types';
 
 interface RecicladorValoracionesPanelProps {
   onBack: () => void;
@@ -15,20 +16,65 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
 }) => {
   const { user } = useAuth();
 
-  // Filtrar valoraciones para el reciclador actual
-  const misValoraciones = mockValoraciones.filter(v => v.recicladorId === user?.id);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [stats, setStats] = useState<ReviewStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [lastDoc, setLastDoc] = useState<string | undefined>(undefined);
 
-  // Calcular estadísticas
-  const promedioRating = misValoraciones.length > 0 
-    ? (misValoraciones.reduce((acc, v) => acc + v.rating, 0) / misValoraciones.length).toFixed(1)
-    : '0.0';
+  const fetchReviews = useCallback(async (recyclerId: string, startAfterDoc?: string) => {
+    if (startAfterDoc) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+    }
+    setError(null);
 
-  const distribucionRatings = {
-    5: misValoraciones.filter(v => v.rating === 5).length,
-    4: misValoraciones.filter(v => v.rating === 4).length,
-    3: misValoraciones.filter(v => v.rating === 3).length,
-    2: misValoraciones.filter(v => v.rating === 2).length,
-    1: misValoraciones.filter(v => v.rating === 1).length,
+    try {
+      const response = await ReviewService.getReviews(recyclerId, { 
+        limit: 6, 
+        startAfter: startAfterDoc 
+      });
+      
+      setReviews(prev => startAfterDoc ? [...prev, ...response.reviews] : response.reviews);
+      if (!startAfterDoc) {
+        setStats(response.stats);
+      }
+      setHasMore(response.hasMore);
+      setLastDoc(response.lastDoc);
+
+    } catch (err) {
+      setError("No se pudieron cargar las valoraciones.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchReviews(user.id);
+    }
+  }, [user, fetchReviews]);
+
+  // Calcular distribución de ratings a partir de los datos del estado
+  const distribucionRatings = React.useMemo(() => {
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(review => {
+      if (review.rating >= 1 && review.rating <= 5) {
+        distribution[review.rating as keyof typeof distribution]++;
+      }
+    });
+    return distribution;
+  }, [reviews]);
+
+  const handleLoadMore = () => {
+    if (user?.id && hasMore && !isLoadingMore) {
+      fetchReviews(user.id, lastDoc);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -52,6 +98,24 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
     ));
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader className="w-12 h-12 animate-spin text-green-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+        <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
+        <h2 className="text-xl font-semibold mb-2">Ocurrió un error</h2>
+        <p className="text-gray-600">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -72,7 +136,7 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
             <div className="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
               <Star className="w-6 h-6 text-yellow-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{promedioRating}</p>
+            <p className="text-2xl font-bold text-gray-900">{stats?.averageRating.toFixed(1) || '0.0'}</p>
             <p className="text-sm text-gray-600">Promedio General</p>
           </div>
         </Card>
@@ -82,7 +146,7 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
             <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
               <MessageSquare className="w-6 h-6 text-blue-600" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{misValoraciones.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{stats?.totalReviews || 0}</p>
             <p className="text-sm text-gray-600">Total Valoraciones</p>
           </div>
         </Card>
@@ -103,7 +167,8 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
               <User className="w-6 h-6 text-purple-600" />
             </div>
             <p className="text-2xl font-bold text-gray-900">
-              {new Set(misValoraciones.map(v => v.ciudadanoId)).size}
+              {/* Nota: La API no provee clientes únicos, este cálculo es una aproximación desde los datos cargados */}
+              {new Set(reviews.map(v => v.usuarioId)).size}
             </p>
             <p className="text-sm text-gray-600">Clientes Únicos</p>
           </div>
@@ -124,8 +189,8 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
                 <div
                   className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
                   style={{
-                    width: misValoraciones.length > 0 
-                      ? `${(distribucionRatings[stars as keyof typeof distribucionRatings] / misValoraciones.length) * 100}%`
+                    width: stats && stats.totalReviews > 0 
+                      ? `${(distribucionRatings[stars as keyof typeof distribucionRatings] / stats.totalReviews) * 100}%`
                       : '0%'
                   }}
                 />
@@ -142,7 +207,7 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-900">Valoraciones Recientes</h2>
         
-        {misValoraciones.length === 0 ? (
+        {reviews.length === 0 ? (
           <Card>
             <div className="text-center py-12">
               <Star className="w-16 h-16 mx-auto mb-4 text-gray-300" />
@@ -156,45 +221,37 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
           </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {misValoraciones
-              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            {reviews
               .map((valoracion) => {
-                const ciudadano = mockCiudadanos.find(c => c.id === valoracion.ciudadanoId);
-                
+                // La API no devuelve los datos del ciudadano, así que los mostramos anónimamente
                 return (
                   <Card key={valoracion.id}>
                     <div className="space-y-4">
                       {/* Header con info del ciudadano */}
                       <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
-                          {ciudadano?.avatar ? (
-                            <img
-                              src={ciudadano.avatar}
-                              alt={ciudadano.name}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                               <User className="w-5 h-5 text-gray-600" />
-                            </div>
-                          )}
+                          </div>
                           <div>
                             <h3 className="font-medium text-gray-900">
-                              {ciudadano?.name || 'Cliente'}
+                              Cliente Anónimo
                             </h3>
                             <div className="flex items-center space-x-1 text-sm text-gray-500">
                               <Calendar className="w-3 h-3" />
-                              <span>{formatDate(valoracion.createdAt)}</span>
+                              <span>{formatDate(valoracion.fecha)}</span>
                             </div>
                           </div>
                         </div>
                         
                         <Badge 
-                          variant={
-                            valoracion.rating >= 5 ? 'success' :
-                            valoracion.rating >= 4 ? 'info' :
-                            valoracion.rating >= 3 ? 'warning' : 'error'
-                          }
+                          variant={{
+                            5: 'success',
+                            4: 'info',
+                            3: 'warning',
+                            2: 'error',
+                            1: 'error'
+                          }[valoracion.rating] as any}
                         >
                           {valoracion.rating} ⭐
                         </Badge>
@@ -222,6 +279,13 @@ export const RecicladorValoracionesPanel: React.FC<RecicladorValoracionesPanelPr
                   </Card>
                 );
               })}
+          </div>
+        )}
+        {hasMore && (
+          <div className="text-center mt-8">
+            <Button onClick={handleLoadMore} isLoading={isLoadingMore}>
+              Cargar más valoraciones
+            </Button>
           </div>
         )}
       </div>
