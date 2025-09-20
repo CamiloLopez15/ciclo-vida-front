@@ -48,8 +48,7 @@ export const ValoracionModal: React.FC<ValoracionModalProps> = ({
       setComentario('');
 
     } catch (error) {
-      console.error("Error al enviar la valoración:", error);
-      alert("No se pudo enviar la valoración. Inténtalo de nuevo.");
+      console.log("Error al enviar la valoración:", error);
     } finally {
       setIsLoading(false);
     }
