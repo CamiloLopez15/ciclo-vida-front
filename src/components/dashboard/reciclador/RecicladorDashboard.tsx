@@ -109,8 +109,8 @@ export const RecicladorDashboard: React.FC = () => {
   };
 
   const recoleccionesPendientes: Recoleccion[] = recolecciones.filter((r: Recoleccion) => r.estado === 'pendiente');
-  const recoleccionesAceptadas: Recoleccion[] = recolecciones.filter((r: Recoleccion) => r.recicladorId === user?.id);
-  const recoleccionesCompletadas: Recoleccion[] = recoleccionesAceptadas.filter((r: Recoleccion) => r.estado === 'completada');
+  const recoleccionesAceptadas: Recoleccion[] = recolecciones.filter((r: Recoleccion) => r.recicladorId == user?.id || r.recicladorId == user?.id);
+  const recoleccionesCompletadas: Recoleccion[] = recolecciones.filter((r: Recoleccion) => r.estado == 'completada');
 
   const stats = {
     completadas: recoleccionesCompletadas.length,
@@ -147,6 +147,23 @@ export const RecicladorDashboard: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {recoleccionesPendientes.map((recoleccion: Recoleccion) => (
+                <RecoleccionCard
+                  key={recoleccion.id}
+                  recoleccion={recoleccion}
+                  userType="reciclador"
+                  onAction={handleRecoleccionAction}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Recolecciones Aceptadas */}
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Recolecciones Completadas ({recoleccionesCompletadas.length})
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {recoleccionesCompletadas.map((recoleccion: Recoleccion) => (
                 <RecoleccionCard
                   key={recoleccion.id}
                   recoleccion={recoleccion}
