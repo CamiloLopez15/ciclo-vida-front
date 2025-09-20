@@ -61,18 +61,14 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
             </Badge>
             <span className="text-sm text-gray-500">#{recoleccion.id}</span>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center text-sm text-gray-600">
               <Calendar className="w-4 h-4 mr-2" />
               {formatDate(recoleccion.fecha)}
             </div>
-            
-            <div className="flex items-center text-sm text-gray-600">
-              <Clock className="w-4 h-4 mr-2" />
-              {formatTime(recoleccion.hora)}
-            </div>
-            
+
+
             <div className="flex items-start text-sm text-gray-600">
               <MapPin className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
               <span>{recoleccion.direccion}</span>
@@ -105,14 +101,14 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
       <div className="flex space-x-2 pt-4 border-t">
         {userType === 'reciclador' && recoleccion.estado === 'pendiente' && (
           <>
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => setShowCompletionModal(true)}
             >
               Aceptar
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => onAction?.('ver_detalles', recoleccion)}
             >
@@ -120,17 +116,17 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
             </Button>
           </>
         )}
-        
+
         {userType === 'reciclador' && recoleccion.estado === 'aceptada' && (
           <>
-            <Button 
+            <Button
               size="sm"
               onClick={() => onAction?.('iniciar', recoleccion)}
             >
               Iniciar Recolección
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => onAction?.('contactar', recoleccion)}
             >
@@ -138,29 +134,29 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
             </Button>
           </>
         )}
-        
+
         {userType === 'reciclador' && recoleccion.estado === 'en_progreso' && (
-          <Button 
+          <Button
             size="sm"
             onClick={() => onAction?.('completar', recoleccion)}
           >
             Completar
           </Button>
         )}
-        
+
         {userType === 'ciudadano' && recoleccion.estado === 'pendiente' && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => onAction?.('cancelar', recoleccion)}
           >
             Cancelar
           </Button>
         )}
-        
+
         {userType === 'ciudadano' && recoleccion.estado === 'completada' && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             size="sm"
             onClick={() => onAction?.('valorar', recoleccion)}
           >
