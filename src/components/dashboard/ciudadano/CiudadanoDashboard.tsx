@@ -11,7 +11,7 @@ import { EditProfileModal } from '../../profile/EditProfileModal';
 import { MapView } from '../../maps/MapView';
 import { useAuth } from '../../../context/AuthContext';
 import { mockRecolecciones, mockRecicladores, mockNotificaciones } from '../../../data/mockData';
-import { Notificacion, Recoleccion, Reciclador } from '../../../types';
+import { Notificacion, Recoleccion } from '../../../types';
 
 export const CiudadanoDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -48,24 +48,7 @@ export const CiudadanoDashboard: React.FC = () => {
     }
   };
 
-  const handleValoracionSubmit = (valoracion: { rating: number; comentario: string }) => {
-    if (selectedRecoleccion) {
-      const nuevaValoracion = {
-        id: Date.now().toString(),
-        recoleccionId: selectedRecoleccion.id,
-        ciudadanoId: user?.id || '1',
-        recicladorId: selectedRecoleccion.recicladorId || '',
-        rating: valoracion.rating,
-        comentario: valoracion.comentario,
-        createdAt: new Date().toISOString()
-      };
-      
-      console.log('Nueva valoración creada:', nuevaValoracion);
-      // Aquí se enviará a la API en el futuro
-      
-      // Mostrar mensaje de éxito (opcional)
-      alert('¡Valoración enviada exitosamente!');
-    }
+  const handleValoracionSubmit = () => {
     // Aquí se enviaría la valoración a la API
   };
 
@@ -371,7 +354,7 @@ export const CiudadanoDashboard: React.FC = () => {
               }}
               recoleccion={selectedRecoleccion}
               reciclador={reciclador}
-              onSubmit={handleValoracionSubmit}
+              onSuccess={() => handleValoracionSubmit()}
             />
           ) : null;
         })()
