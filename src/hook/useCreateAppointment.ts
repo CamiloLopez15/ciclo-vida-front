@@ -38,6 +38,7 @@ export interface Appointment {
   descripcion: string;
   estado: 'pendiente' | 'aceptada' | 'en_progreso' | 'completada' | 'cancelada';
   createdAt?: string;
+  materials: string[];
 }
 
 /**

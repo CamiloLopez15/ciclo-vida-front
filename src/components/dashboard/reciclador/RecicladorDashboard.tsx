@@ -61,7 +61,7 @@ export const RecicladorDashboard: React.FC = () => {
           hora: '',
           direccion: a.direccion,
           coordinates: { lat: 0, lng: 0 },
-          tipoMaterial: [] as string[],
+          tipoMaterial: a.materials,
           descripcion: a.descripcion,
           estado: a.estado as Recoleccion['estado'],
           createdAt: fechaISO,
