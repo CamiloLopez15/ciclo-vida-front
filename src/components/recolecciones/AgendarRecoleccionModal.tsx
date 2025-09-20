@@ -71,20 +71,16 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
       // Si en tu flujo ya conoces el reciclador, puedes pasarle por props o administrar su selección en el padre.
       // Por ahora, enviamos una cadena vacía para mantener compatibilidad con el payload del backend si es requerido.
 
-      const payload = {
-        clienteId: user?.id || 'anon',
-        recicladorId: '',
-        fecha: { seconds, nanoseconds: 0 },
-        direccion: formData.direccion,
-        cantidadAproxMaterial: 0, // El modal no pide cantidad; ajusta si agregas este campo
-        descripcion: formData.descripcion || 'Solicitud de recolección',
-        estado: 'pendiente' as const,
-        materials: formData.tipoMaterial,
-      };
-
-      console.log('Enviando datos:', payload);
-      const created = await createAppointment(payload);
-      console.log('Respuesta de la API:', created);
+    const created = await createAppointment({
+      clienteId: user?.id || 'anon',
+      recicladorId: '',
+      fecha: { seconds, nanoseconds: 0 },
+      direccion: formData.direccion,
+      cantidadAproxMaterial: formData.tipoMaterial.length, // El modal no pide cantidad; ajusta si agregas este campo
+      descripcion: formData.descripcion || 'Solicitud de recolección',
+      estado: 'pendiente',
+      materials: formData.tipoMaterial,
+    });
 
       // Siempre limpiar el formulario y cerrar el modal si la API fue llamada
       // independientemente de la respuesta

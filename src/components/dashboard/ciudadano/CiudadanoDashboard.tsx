@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, MapPin, Recycle, Star, Plus, Users } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
@@ -10,8 +10,9 @@ import { RecicladorCard } from '../../recicladores/RecicladorCard';
 import { EditProfileModal } from '../../profile/EditProfileModal';
 import { MapView } from '../../maps/MapView';
 import { useAuth } from '../../../context/AuthContext';
-import { mockRecolecciones, mockRecicladores, mockNotificaciones } from '../../../data/mockData';
+import { mockRecicladores, mockNotificaciones } from '../../../data/mockData';
 import { Notificacion, Recoleccion } from '../../../types';
+import { useListAppointments } from '../../../hook/useListAppointments';
 
 export const CiudadanoDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -20,10 +21,57 @@ export const CiudadanoDashboard: React.FC = () => {
   const [showValoracionModal, setShowValoracionModal] = useState(false);
   const [selectedRecoleccion, setSelectedRecoleccion] = useState<Recoleccion | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'recolecciones' | 'recicladores' | 'mapa' | 'notificaciones'>('dashboard');
-  const [recolecciones, setRecolecciones] = useState(mockRecolecciones.filter(r => r.ciudadanoId === user?.id));
+  const [recolecciones, setRecolecciones] = useState<Recoleccion[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>(
     mockNotificaciones.filter(n => n.userId === user?.id)
   );
+  const { appointments, loading: loadingAppointments, error: appointmentsError, fetchAppointments } = useListAppointments();
+
+  // Traer appointments al montar
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // Mapear appointments a Recoleccion[] para la vista del ciudadano
+  useEffect(() => {
+    if (appointments) {
+      const mapped: Recoleccion[] = appointments
+        .filter(a => a.clienteId === user?.id) // solo del ciudadano actual
+        .map((a) => {
+          let fechaISO: string;
+          try {
+            if (!a.fecha) {
+              fechaISO = new Date().toISOString();
+            } else if (typeof a.fecha === 'string') {
+              const d = new Date(a.fecha);
+              fechaISO = isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+            } else if (typeof (a as any).fecha.seconds === 'number') {
+              const d = new Date((a as any).fecha.seconds * 1000);
+              fechaISO = isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+            } else {
+              fechaISO = new Date().toISOString();
+            }
+          } catch {
+            fechaISO = new Date().toISOString();
+          }
+
+          return {
+            id: a.id,
+            ciudadanoId: a.clienteId,
+            recicladorId: a.recicladorId,
+            fecha: fechaISO,
+            hora: '',
+            direccion: a.direccion,
+            coordinates: { lat: 0, lng: 0 },
+            tipoMaterial: Array.isArray((a as any).materials) ? (a as any).materials : [],
+            descripcion: a.descripcion,
+            estado: a.estado as Recoleccion['estado'],
+            createdAt: fechaISO,
+          } as Recoleccion;
+        });
+      setRecolecciones(mapped);
+    }
+  }, [appointments, user?.id]);
 
   const handleAgendarRecoleccion = (data: any) => {
     const nuevaRecoleccion = {
@@ -78,7 +126,7 @@ export const CiudadanoDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Mis Recolecciones</h1>
-              <p className="text-gray-600 mt-2">Gestionasss tus solicitudes de recolección</p>
+              <p className="text-gray-600 mt-2">Gestiona tus solicitudes de recolección</p>
             </div>
             <div className="flex space-x-3">
               <Button variant="outline" onClick={() => setActiveTab('dashboard')}>
@@ -90,6 +138,13 @@ export const CiudadanoDashboard: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          {loadingAppointments && (
+            <div className="text-gray-600 mb-4">Cargando recolecciones...</div>
+          )}
+          {!loadingAppointments && appointmentsError && (
+            <div className="text-red-600 mb-4">{appointmentsError.message}</div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {recolecciones.map((recoleccion) => (

@@ -108,12 +108,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onToggleMode }) => {
           </p>
         </div>
 
-        <div className="mt-6 p-4 bg-green-50 rounded-lg">
-          <p className="text-xs text-green-700 font-medium mb-2">Cuentas de prueba:</p>
-          <p className="text-xs text-green-600">Ciudadano: maria@email.com / 123456</p>
-          <p className="text-xs text-green-600">Reciclador: ana@email.com / 123456</p>
-          <p className="text-xs text-green-600">Admin: admin@ciclovida.com / 123456</p>
-        </div>
       </Card>
     </div>
   );
