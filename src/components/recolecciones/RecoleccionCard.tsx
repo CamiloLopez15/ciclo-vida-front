@@ -83,7 +83,7 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
           <span>Materiales:</span>
         </div>
         <div className="flex flex-wrap gap-1">
-          {recoleccion.tipoMaterial.map((material) => (
+          {(recoleccion.tipoMaterial || []).map((material) => (
             <Badge key={material} variant="default" size="sm">
               {material}
             </Badge>
