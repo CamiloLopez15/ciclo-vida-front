@@ -5,6 +5,7 @@ import { Button } from '../../ui/Button';
 import { NotificacionesPanel } from '../../notificaciones/NotificacionesPanel';
 import { RecoleccionCard } from '../../recolecciones/RecoleccionCard';
 import { EditProfileModal } from '../../profile/EditProfileModal';
+import { RecicladorValoracionesPanel } from '../../valoraciones/RecicladorValoracionesPanel';
 import { MapView } from '../../maps/MapView';
 import { useAuth } from '../../../context/AuthContext';
 import { mockRecolecciones, mockCiudadanos, mockNotificaciones } from '../../../data/mockData';
@@ -12,7 +13,7 @@ import { Notificacion } from '../../../types';
 export const RecicladorDashboard: React.FC = () => {
   const { user } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'recolecciones' | 'mapa' | 'notificaciones'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'recolecciones' | 'mapa' | 'notificaciones' | 'valoraciones'>('dashboard');
   const [recolecciones, setRecolecciones] = useState(mockRecolecciones);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>(
     mockNotificaciones.filter(n => n.userId === user?.id)
@@ -184,6 +185,14 @@ export const RecicladorDashboard: React.FC = () => {
     );
   }
 
+  if (activeTab === 'valoraciones') {
+    return (
+      <RecicladorValoracionesPanel
+        onBack={() => setActiveTab('dashboard')}
+      />
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -304,7 +313,7 @@ export const RecicladorDashboard: React.FC = () => {
               <Star className="w-4 h-4 mr-2" />
               Notificaciones
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start" onClick={() => setActiveTab('valoraciones')}>
               <Star className="w-4 h-4 mr-2" />
               Mis Valoraciones
             </Button>
