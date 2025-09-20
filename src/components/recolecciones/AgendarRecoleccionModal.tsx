@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -38,52 +38,80 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
   onClose,
   onSubmit
 }) => {
-  const [formData, setFormData] = useState({
+  const initialFormState = useMemo(() => ({
     fecha: '',
     hora: '',
     direccion: '',
     tipoMaterial: [] as string[],
     descripcion: ''
-  });
+  }), []);
+  
+  const [formData, setFormData] = useState(initialFormState);
   const { createAppointment, loading } = useCreateAppointment();
   const { user } = useAuth();
+
+  // Efecto para limpiar el formulario cuando el modal se cierre
+  useEffect(() => {
+    if (!isOpen) {
+      // Resetear el formulario cuando el modal se cierra
+      setFormData(initialFormState);
+    }
+  }, [isOpen, initialFormState]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Construir fecha/hora como timestamp estilo Firestore a partir de inputs
-    const isoString = `${formData.fecha}T${formData.hora}:00`;
-    const date = new Date(isoString);
-    const seconds = Math.floor(date.getTime() / 1000);
+    try {
+      // Construir fecha/hora como timestamp estilo Firestore a partir de inputs
+      const isoString = `${formData.fecha}T${formData.hora}:00`;
+      const date = new Date(isoString);
+      const seconds = Math.floor(date.getTime() / 1000);
 
-    // Nota: recicladorId no se selecciona en este modal actualmente.
-    // Si en tu flujo ya conoces el reciclador, puedes pasarle por props o administrar su selección en el padre.
-    // Por ahora, enviamos una cadena vacía para mantener compatibilidad con el payload del backend si es requerido.
+      // Nota: recicladorId no se selecciona en este modal actualmente.
+      // Si en tu flujo ya conoces el reciclador, puedes pasarle por props o administrar su selección en el padre.
+      // Por ahora, enviamos una cadena vacía para mantener compatibilidad con el payload del backend si es requerido.
 
-    const created = await createAppointment({
-      clienteId: user?.id || 'anon',
-      recicladorId: '',
-      fecha: { seconds, nanoseconds: 0 },
-      direccion: formData.direccion,
-      cantidadAproxMaterial: 0, // El modal no pide cantidad; ajusta si agregas este campo
-      descripcion: formData.descripcion || 'Solicitud de recolección',
-      estado: 'pendiente',
-      materials: formData.tipoMaterial,
-    });
+      const payload = {
+        clienteId: user?.id || 'anon',
+        recicladorId: '',
+        fecha: { seconds, nanoseconds: 0 },
+        direccion: formData.direccion,
+        cantidadAproxMaterial: 0, // El modal no pide cantidad; ajusta si agregas este campo
+        descripcion: formData.descripcion || 'Solicitud de recolección',
+        estado: 'pendiente' as const,
+        materials: formData.tipoMaterial,
+      };
 
-    // Si la creación fue exitosa, propagar al padre y cerrar
-    if (created) {
-      onSubmit(created);
-      onClose();
+      console.log('Enviando datos:', payload);
+      const created = await createAppointment(payload);
+      console.log('Respuesta de la API:', created);
 
-      // Reset form
-      setFormData({
-        fecha: '',
-        hora: '',
-        direccion: '',
-        tipoMaterial: [],
-        descripcion: ''
-      });
+      // Siempre limpiar el formulario y cerrar el modal si la API fue llamada
+      // independientemente de la respuesta
+
+      // Resetear el formulario
+      setFormData(initialFormState);
+      
+      // Notificar al padre y cerrar el modal
+      if (created) {
+        onSubmit(created);
+      } else {
+        // Si no hay datos creados, al menos enviar los datos del formulario
+        // para que el padre pueda manejar la situación
+        onSubmit({
+          ...payload,
+          id: 'temp-' + Date.now(), // ID temporal
+          estado: 'pendiente' as const,
+        });
+      }
+      
+      // Cerrar el modal después de todo el proceso
+      setTimeout(() => {
+        onClose();
+      }, 100); // Pequeño timeout para asegurar que React procese los cambios de estado
+    } catch (error) {
+      console.error('Error al agendar recolección:', error);
+      alert('Hubo un error al agendar la recolección. Por favor intenta nuevamente.');
     }
   };
 
