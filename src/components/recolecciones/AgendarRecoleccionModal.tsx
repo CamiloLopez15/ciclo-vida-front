@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, Package } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { Card } from '../ui/Card';
+import { useCreateAppointment } from '../../hook/useCreateAppointment';
+import { useAuth } from '../../context/AuthContext';
 
 interface AgendarRecoleccionModalProps {
   isOpen: boolean;
@@ -44,33 +45,45 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
     tipoMaterial: [] as string[],
     descripcion: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const { createAppointment, loading } = useCreateAppointment();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    onSubmit({
-      ...formData,
-      id: Date.now().toString(),
+
+    // Construir fecha/hora como timestamp estilo Firestore a partir de inputs
+    const isoString = `${formData.fecha}T${formData.hora}:00`;
+    const date = new Date(isoString);
+    const seconds = Math.floor(date.getTime() / 1000);
+
+    // Nota: recicladorId no se selecciona en este modal actualmente.
+    // Si en tu flujo ya conoces el reciclador, puedes pasarle por props o administrar su selección en el padre.
+    // Por ahora, enviamos una cadena vacía para mantener compatibilidad con el payload del backend si es requerido.
+
+    const created = await createAppointment({
+      clienteId: user?.id || 'anon',
+      recicladorId: '',
+      fecha: { seconds, nanoseconds: 0 },
+      direccion: formData.direccion,
+      cantidadAproxMaterial: 0, // El modal no pide cantidad; ajusta si agregas este campo
+      descripcion: formData.descripcion || 'Solicitud de recolección',
       estado: 'pendiente',
-      createdAt: new Date().toISOString()
     });
-    
-    setIsLoading(false);
-    onClose();
-    
-    // Reset form
-    setFormData({
-      fecha: '',
-      hora: '',
-      direccion: '',
-      tipoMaterial: [],
-      descripcion: ''
-    });
+
+    // Si la creación fue exitosa, propagar al padre y cerrar
+    if (created) {
+      onSubmit(created);
+      onClose();
+
+      // Reset form
+      setFormData({
+        fecha: '',
+        hora: '',
+        direccion: '',
+        tipoMaterial: [],
+        descripcion: ''
+      });
+    }
   };
 
   const handleMaterialChange = (material: string) => {
@@ -96,7 +109,7 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
             onChange={(e) => setFormData(prev => ({ ...prev, fecha: e.target.value }))}
             required
           />
-          
+
           <Select
             label="Hora"
             value={formData.hora}
@@ -152,9 +165,9 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
           <Button type="button" variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button 
-            type="submit" 
-            isLoading={isLoading}
+          <Button
+            type="submit"
+            isLoading={loading}
             disabled={!formData.fecha || !formData.hora || !formData.direccion || formData.tipoMaterial.length === 0}
           >
             Agendar Recolección

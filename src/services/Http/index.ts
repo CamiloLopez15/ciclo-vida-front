@@ -6,7 +6,7 @@ export class HttpClient {
 
     private constructor() {
         this._client = axios.create({
-            baseURL: "",
+            baseURL: "https://platform-telemed-dev.uc.r.appspot.com/api",
         });
 
         this._client.interceptors.request.use((config) => {

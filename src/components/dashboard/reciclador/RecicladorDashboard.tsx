@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, MapPin, Star, TrendingUp, Clock, CheckCircle, Settings } from 'lucide-react';
 import { Card } from '../../ui/Card';
 import { Button } from '../../ui/Button';
@@ -8,18 +8,46 @@ import { EditProfileModal } from '../../profile/EditProfileModal';
 import { RecicladorValoracionesPanel } from '../../valoraciones/RecicladorValoracionesPanel';
 import { MapView } from '../../maps/MapView';
 import { useAuth } from '../../../context/AuthContext';
-import { mockRecolecciones, mockCiudadanos, mockNotificaciones } from '../../../data/mockData';
-import { Notificacion } from '../../../types';
+import { mockCiudadanos, mockNotificaciones } from '../../../data/mockData';
+import { Notificacion, Recoleccion } from '../../../types';
+import { useListAppointments } from '../../../hook/useListAppointments';
+
 export const RecicladorDashboard: React.FC = () => {
   const { user } = useAuth();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'recolecciones' | 'mapa' | 'notificaciones' | 'valoraciones'>('dashboard');
-  const [recolecciones, setRecolecciones] = useState(mockRecolecciones);
+  const [recolecciones, setRecolecciones] = useState<Recoleccion[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>(
     mockNotificaciones.filter(n => n.userId === user?.id)
   );
+  const { appointments, loading: loadingAppointments, error: appointmentsError, fetchAppointments } = useListAppointments();
 
-  const handleRecoleccionAction = (action: string, recoleccion: any) => {
+  // Fetch citas al montar
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // Mapear citas del backend al shape usado en la UI de recolecciones
+  useEffect(() => {
+    if (appointments) {
+      const mapped: Recoleccion[] = appointments.map((a) => ({
+        id: a.id,
+        ciudadanoId: a.clienteId,
+        recicladorId: a.recicladorId,
+        fecha: typeof a.fecha === 'string' ? a.fecha : new Date(a.fecha.seconds * 1000).toISOString(),
+        hora: '',
+        direccion: a.direccion,
+        coordinates: { lat: 0, lng: 0 },
+        tipoMaterial: [] as string[],
+        descripcion: a.descripcion,
+        estado: a.estado as Recoleccion['estado'],
+        createdAt: new Date().toISOString(),
+      }));
+      setRecolecciones(mapped);
+    }
+  }, [appointments]);
+
+  const handleRecoleccionAction = (action: string, recoleccion: Recoleccion) => {
     if (action === 'aceptar') {
       setRecolecciones(prev => 
         prev.map(r => 
@@ -50,7 +78,7 @@ export const RecicladorDashboard: React.FC = () => {
 
   const handleNotificationAction = (action: 'markAsRead' | 'delete' | 'markAllAsRead', id?: string) => {
     if (action === 'markAsRead' && id) {
-      setNotificaciones(prev => 
+      setNotificaciones(prev =>
         prev.map(n => n.id === id ? { ...n, leida: true } : n)
       );
     } else if (action === 'delete' && id) {
@@ -60,15 +88,15 @@ export const RecicladorDashboard: React.FC = () => {
     }
   };
 
-  const recoleccionesPendientes = recolecciones.filter(r => r.estado === 'pendiente');
-  const recoleccionesAceptadas = recolecciones.filter(r => r.recicladorId === user?.id);
-  const recoleccionesCompletadas = recoleccionesAceptadas.filter(r => r.estado === 'completada');
+  const recoleccionesPendientes: Recoleccion[] = recolecciones.filter((r: Recoleccion) => r.estado === 'pendiente');
+  const recoleccionesAceptadas: Recoleccion[] = recolecciones.filter((r: Recoleccion) => r.recicladorId === user?.id);
+  const recoleccionesCompletadas: Recoleccion[] = recoleccionesAceptadas.filter((r: Recoleccion) => r.estado === 'completada');
 
   const stats = {
     completadas: recoleccionesCompletadas.length,
     pendientes: recoleccionesPendientes.length,
     rating: 4.8,
-    esteMes: recoleccionesCompletadas.filter(r => 
+    esteMes: recoleccionesCompletadas.filter(r =>
       new Date(r.createdAt).getMonth() === new Date().getMonth()
     ).length
   };
@@ -85,7 +113,12 @@ export const RecicladorDashboard: React.FC = () => {
             Volver al Dashboard
           </Button>
         </div>
-
+        {loadingAppointments && (
+          <div className="text-gray-600 mb-4">Cargando recolecciones...</div>
+        )}
+        {!loadingAppointments && appointmentsError && (
+          <div className="text-red-600 mb-4">{appointmentsError.message}</div>
+        )}
         <div className="space-y-8">
           {/* Recolecciones Pendientes */}
           <div>
@@ -93,7 +126,7 @@ export const RecicladorDashboard: React.FC = () => {
               Recolecciones Pendientes ({recoleccionesPendientes.length})
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {recoleccionesPendientes.map((recoleccion) => (
+              {recoleccionesPendientes.map((recoleccion: Recoleccion) => (
                 <RecoleccionCard
                   key={recoleccion.id}
                   recoleccion={recoleccion}
@@ -110,7 +143,7 @@ export const RecicladorDashboard: React.FC = () => {
               Mis Recolecciones ({recoleccionesAceptadas.length})
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {recoleccionesAceptadas.map((recoleccion) => (
+              {recoleccionesAceptadas.map((recoleccion: Recoleccion) => (
                 <RecoleccionCard
                   key={recoleccion.id}
                   recoleccion={recoleccion}
@@ -156,7 +189,7 @@ export const RecicladorDashboard: React.FC = () => {
         title: 'Mi ubicación',
         type: 'reciclador' as const
       },
-      ...recoleccionesPendientes.map(r => ({
+      ...recoleccionesPendientes.map((r: Recoleccion) => ({
         id: r.id,
         position: r.coordinates,
         title: `Recolección ${r.id}`,
@@ -256,7 +289,7 @@ export const RecicladorDashboard: React.FC = () => {
         <Card>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Recolecciones Pendientes</h2>
           <div className="space-y-4">
-            {recoleccionesPendientes.slice(0, 2).map((recoleccion) => {
+            {recoleccionesPendientes.slice(0, 2).map((recoleccion: Recoleccion) => {
               const ciudadano = mockCiudadanos.find(c => c.id === recoleccion.ciudadanoId);
               return (
                 <div key={recoleccion.id} className="border border-gray-200 rounded-lg p-4">
@@ -268,7 +301,7 @@ export const RecicladorDashboard: React.FC = () => {
                         {new Date(recoleccion.fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}, {recoleccion.hora}
                       </p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {recoleccion.tipoMaterial.map((material) => (
+                        {recoleccion.tipoMaterial.map((material: string) => (
                           <span key={material} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                             {material}
                           </span>
