@@ -65,7 +65,7 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
       recicladorId: '',
       fecha: { seconds, nanoseconds: 0 },
       direccion: formData.direccion,
-      cantidadAproxMaterial: 0, // El modal no pide cantidad; ajusta si agregas este campo
+      cantidadAproxMaterial: formData.tipoMaterial.length, // El modal no pide cantidad; ajusta si agregas este campo
       descripcion: formData.descripcion || 'Solicitud de recolección',
       estado: 'pendiente',
       materials: formData.tipoMaterial,
