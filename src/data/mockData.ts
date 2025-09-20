@@ -129,6 +129,42 @@ export const mockValoraciones: Valoracion[] = [
     rating: 4,
     comentario: 'Buen servicio, llegó a tiempo y fue muy profesional',
     createdAt: '2024-01-30T16:30:00Z'
+  },
+  {
+    id: '3',
+    recoleccionId: '1',
+    ciudadanoId: '2',
+    recicladorId: '3',
+    rating: 5,
+    comentario: 'Ana es increíble! Muy profesional y educada. Llegó exactamente a la hora acordada y manejó todos los materiales con mucho cuidado.',
+    createdAt: '2024-01-26T14:15:00Z'
+  },
+  {
+    id: '4',
+    recoleccionId: '2',
+    ciudadanoId: '1',
+    recicladorId: '3',
+    rating: 4,
+    comentario: 'Muy buen trabajo, solo llegó 10 minutos tarde pero el servicio fue excelente.',
+    createdAt: '2024-01-28T11:45:00Z'
+  },
+  {
+    id: '5',
+    recoleccionId: '3',
+    ciudadanoId: '2',
+    recicladorId: '4',
+    rating: 5,
+    comentario: 'Pedro es muy eficiente y amable. Explicó todo el proceso de reciclaje muy bien.',
+    createdAt: '2024-01-29T16:20:00Z'
+  },
+  {
+    id: '6',
+    recoleccionId: '4',
+    ciudadanoId: '1',
+    recicladorId: '4',
+    rating: 3,
+    comentario: 'Servicio correcto, aunque podría mejorar la comunicación previa.',
+    createdAt: '2024-01-31T09:30:00Z'
   }
 ];
 
