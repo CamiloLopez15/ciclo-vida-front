@@ -2,8 +2,8 @@ import { Ciudadano, Reciclador, Recoleccion, Valoracion } from '../types';
 
 export const mockCiudadanos: Ciudadano[] = [
   {
-    id: '1',
-    email: 'maria@email.com',
+    id: 'lQ3Y1LDeo2gwfsGmGhuh',
+    email: 'maria.gonzalez@email.com',
     name: 'María González',
     phone: '+57 300 123 4567',
     type: 'ciudadano',
@@ -13,8 +13,8 @@ export const mockCiudadanos: Ciudadano[] = [
     createdAt: '2024-01-15T10:00:00Z'
   },
   {
-    id: '2',
-    email: 'carlos@email.com',
+    id: 'oYrCPiDbZAp8V8MF7Nsf',
+    email: 'carlos.rodriguez@email.com',
     name: 'Carlos Rodríguez',
     phone: '+57 301 234 5678',
     type: 'ciudadano',
@@ -27,8 +27,8 @@ export const mockCiudadanos: Ciudadano[] = [
 
 export const mockRecicladores: Reciclador[] = [
   {
-    id: '3',
-    email: 'ana@email.com',
+    id: 'DKX5vga5BjPWnq8v0ylq',
+    email: 'ana.martinez@email.com',
     name: 'Ana Martínez',
     phone: '+57 302 345 6789',
     type: 'reciclador',
@@ -42,8 +42,8 @@ export const mockRecicladores: Reciclador[] = [
     createdAt: '2023-08-10T09:00:00Z'
   },
   {
-    id: '4',
-    email: 'pedro@email.com',
+    id: 'CXPsJCtEk7v7I8VaJvbH',
+    email: 'pedro.sanchez@email.com',
     name: 'Pedro Sánchez',
     phone: '+57 303 456 7890',
     type: 'reciclador',
