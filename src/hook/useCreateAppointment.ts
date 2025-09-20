@@ -20,6 +20,7 @@ export interface AppointmentCreatePayload {
   direccion: string;
   cantidadAproxMaterial: number;
   descripcion: string;
+  materials: string[];
   estado: 'pendiente' | 'aceptada' | 'en_progreso' | 'completada' | 'cancelada';
 }
 

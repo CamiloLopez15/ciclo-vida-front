@@ -156,7 +156,7 @@ export const AdminDashboard: React.FC = () => {
                   </div>
                   
                   <div className="flex space-x-2 ml-4">
-                    <Button variant="outline" size="sm">Ver Detalles</Button>
+                    {/* <Button variant="outline" size="sm">Ver Detalles</Button> */}
                     <Button variant="outline" size="sm">Editar</Button>
                   </div>
                 </div>

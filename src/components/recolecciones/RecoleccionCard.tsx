@@ -107,13 +107,13 @@ export const RecoleccionCard: React.FC<RecoleccionCardProps> = ({
             >
               Aceptar
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={() => onAction?.('ver_detalles', recoleccion)}
             >
               Ver Detalles
-            </Button>
+            </Button> */}
           </>
         )}
 

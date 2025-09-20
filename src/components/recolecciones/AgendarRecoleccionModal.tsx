@@ -68,6 +68,7 @@ export const AgendarRecoleccionModal: React.FC<AgendarRecoleccionModalProps> = (
       cantidadAproxMaterial: 0, // El modal no pide cantidad; ajusta si agregas este campo
       descripcion: formData.descripcion || 'Solicitud de recolección',
       estado: 'pendiente',
+      materials: formData.tipoMaterial,
     });
 
     // Si la creación fue exitosa, propagar al padre y cerrar

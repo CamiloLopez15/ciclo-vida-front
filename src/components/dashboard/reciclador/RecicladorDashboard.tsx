@@ -349,7 +349,7 @@ export const RecicladorDashboard: React.FC = () => {
                       <Button size="sm" onClick={() => handleRecoleccionAction('aceptar', recoleccion)}>
                         Aceptar
                       </Button>
-                      <Button variant="outline" size="sm">Ver Detalles</Button>
+                      {/* <Button variant="outline" size="sm">Ver Detalles</Button> */}
                     </div>
                   </div>
                 </div>
